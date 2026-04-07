@@ -757,9 +757,9 @@
       MindGuard AI
     </div>
     <nav>
-      <a href="landing page.html">⌂ Home</a>
-      <a href="screening page.html" class="active">⌁ Screening Tool</a>
-      <a href="dashboard page.html">⌘ Dashboard</a>
+      <a href="/">⌂ Home</a>
+      <a href="/screening">⌁ Screening Tool</a>
+      <a href="/dashboard">⌘ Dashboard</a>
     </nav>
   </header>
 
@@ -1185,23 +1185,29 @@
     };
   }
 
-  async function sendPredictionRequest(formData) {
-    const response = await fetch("http://127.0.0.1:5000/predict", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(formData)
+ async function sendPredictionRequest(formData) {
+    // Use relative path - will work with Flask
+    const response = await fetch("/predict", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(formData)
     });
 
-    const result = await response.json();
-
     if (!response.ok) {
-      throw new Error(result.error || "Prediction failed");
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    
+    if (!result.success && result.error) {
+        throw new Error(result.error);
     }
 
     return result;
-  }
+}
 
   function savePredictionResult(apiResult, submittedData) {
     const record = {
@@ -1246,7 +1252,7 @@
 
       savePredictionResult(apiResult, formData);
 
-      window.location.href = "dashboard page.html";
+      window.location.href = "/dashboard";
     } catch (error) {
       alert("Error: " + error.message);
       resultButton.disabled = false;
